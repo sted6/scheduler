@@ -4,19 +4,19 @@ TODO
 
 INDEX
   Fetch all confirmed appointments by user............line 34
-  Fetch all pending appointments by user..............line 52
-  Fetch user's appointments pending cancellation......line 70
-  Fetch user's declined appointments by guest.........line 88
+  Fetch all pending appointments by user..............line 57
+  Fetch user's appointments pending cancellation......line 80
+  Fetch user's declined appointments by guest.........line 103
 
-  Create new pending appointment......................line 107
-  Confirm a pending appointment.......................line 125
-  Decline a pending appointment (guest)...............line 144
-  Cancel a pending appointment (host).................line 160
+  Create new pending appointment......................line 122
+  Confirm a pending appointment.......................line 140
+  Decline a pending appointment (guest)...............line 159
+  Cancel a pending appointment (host).................line 175
 
-  Request a cancellation of a confirmed appointment...line 175
-  Confirm a cancellation request......................line 190
-  Decline a cancellation request......................line 205
-  Delete a declined request...........................line 220
+  Request a cancellation of a confirmed appointment...line 190
+  Confirm a cancellation request......................line 205
+  Decline a cancellation request......................line 220
+  Delete a declined request...........................line 235
 */
 
 import { Timestamp } from '@google-cloud/firestore';
