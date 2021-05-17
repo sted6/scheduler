@@ -1,0 +1,169 @@
+/*
+  INDEX
+  Appointment types flex box containers...line 13
+  Blockview...............................line 22
+  Appointment inside blockview............line 27
+  Tableview...............................line 72
+  No-appointment-messages.................line 158 & 164
+*/
+
+#newAppointmentForm {
+  padding: 50px;
+}
+/* Appointment flex containers */
+.confirmed-appointments,
+.pending-appointments,
+.appointments-pending-cancellation,
+.declined-appointments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  /* Blockview */
+  .blockview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    /* Appointments inside blockview */
+    .appointment {
+      &.confirmed {
+        background-color: aliceblue;
+      }
+      &.pending {
+        background-color: #edffee;
+      }
+      &.pending-cancellation {
+        background-color: #ffeaea;
+      }
+      &.declined {
+        background-color: #ff9d9d;
+      }
+      display: flex;
+      flex-direction: column;
+      border: 2px solid black;
+      border-radius: 25px;
+      padding: 10px;
+      padding-top: 0px;
+      margin: 10px;
+      flex: 0 1 530px;
+      .details {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        .set {
+          margin: 10px;
+          h5 {
+            font-weight: bold;
+            margin-bottom: 2px;
+          }
+        }
+      }
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        flex-grow: 1;
+        button {
+          margin: 10px;
+        }
+      }
+    }
+  }
+  /* Tableview */
+  .tableview {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+    .appointment-table {
+      border: 1px solid #1c6ea4;
+      background-color: #eeeeee;
+      width: 100%;
+      text-align: left;
+      border-collapse: collapse;
+      &.table {
+        display: table;
+      }
+      .table-heading {
+        display: table-header-group;
+      }
+      .table-row {
+        display: table-row;
+        &:nth-child(even) {
+          background: #d0e4f5;
+        }
+      }
+      .table-cell,
+      .table-head {
+        display: table-cell;
+        &.actions {
+          display: flex;
+          justify-content: space-evenly;
+          flex-wrap: wrap;
+          button {
+            margin-bottom: 5px;
+          }
+        }
+      }
+      .table-heading {
+        display: table-header-group;
+      }
+      .tableFoot {
+        display: table-footer-group;
+      }
+      .table-body {
+        display: table-row-group;
+        .table-cell {
+          font-size: 13px;
+        }
+      }
+      .table-cell,
+      .table-head {
+        border: 1px solid #aaaaaa;
+        padding: 3px 2px;
+      }
+      .table-heading {
+        background: #1c6ea4;
+        background: -moz-linear-gradient(
+          top,
+          #5592bb 0%,
+          #327cad 66%,
+          #1c6ea4 100%
+        );
+        background: -webkit-linear-gradient(
+          top,
+          #5592bb 0%,
+          #327cad 66%,
+          #1c6ea4 100%
+        );
+        background: linear-gradient(
+          to bottom,
+          #5592bb 0%,
+          #327cad 66%,
+          #1c6ea4 100%
+        );
+        border-bottom: 2px solid #444444;
+        .table-head {
+          font-size: 15px;
+          font-weight: bold;
+          color: #ffffff;
+          border-left: 2px solid #d0e4f5;
+          text-align: center;
+          &:first-child {
+            border-left: none;
+          }
+        }
+      }
+    }
+  }
+  /* No appointment messages */
+  .no-appointment-message {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+}
+/* The last no appointment message */
+.declined-appointments {
+  .no-appointment-message {
+    margin-bottom: 100px;
+  }
+}
+

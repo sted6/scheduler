@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "scheduler-c7f9a"
+  },
+  "targets": {
+    "scheduler-c7f9a": {
+      "hosting": {
+        "scheduler": [
+          "scheduler-c7f9a"
+        ]
+      }
+    }
+  }
+}

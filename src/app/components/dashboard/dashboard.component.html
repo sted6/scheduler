@@ -1,0 +1,440 @@
+<!--
+  INDEX
+  New Appointment Form................line 33
+    Title.............................line 37
+    Description.......................line 48
+    Guest.............................line 54
+    Date..............................line 67
+    Start Time........................line 84
+    EndTime...........................line 98
+
+  Confirmed Appointments..............line 117
+    Blockview.........................line 123
+    Tableview.........................line 156
+
+  Appointments Pending Cancellation...line 190
+    Blockview.........................line 196
+    Tableview.........................line 234
+
+  Pending Appointments................line 277
+    Blockview.........................line 283
+    Tableview.........................line 321
+
+  Declined Appointments...............line 363
+    Blockview.........................line 369
+    Tableview.........................line 402
+-->
+
+<h1>Appointments</h1>
+<button class="btn btn-secondary" id="add-appointment"
+  (click)="openModal(newAppointmentForm)">Add Appointment
+</button>
+<!-- Begin New Appointment Form Modal Content -->
+<ng-template #newAppointmentForm>
+  <form id="newAppointmentForm" name="newAppointmentForm" ngForm (ngSubmit)="createNewPendingAppointment(newAppointmentForm)" #newAppointmentForm="ngForm" [appInvalidTimes]>
+    <h3 class="text-center">Add Appointment</h3>
+    <!-- Title -->
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" class="form-control" id="title" name="title" #title="ngModel" placeholder="Enter a title"
+        maxlength="50" required [(ngModel)]="this.inputTitle" />
+      <div *ngIf="title.invalid && (title.dirty || title.touched)" class="alert alert-danger">
+        <div *ngIf="title.errors.required">
+          Title is required.
+        </div>
+      </div>
+    </div>
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description">Description</label>
+      <input class="form-control" type="text" id="description" name="description"
+        placeholder="Enter a brief description" maxlength="200" [(ngModel)]="this.inputDescription" />
+    </div>
+    <!-- Guest -->
+    <div class="form-group">
+      <label for="guest">Guest</label>
+      <select class="form-control" id="guest" name="guest" required [(ngModel)]="this.inputGuest" #guest="ngModel"
+        required>
+        <option *ngFor="let user of otherUsers" [value]="user.username">{{user.username}}</option>
+      </select>
+      <div *ngIf="guest.invalid && (guest.dirty || guest.touched)" class="alert alert-danger">
+        <div *ngIf="guest.errors.required">
+          Guest is required.
+        </div>
+      </div>
+    </div>
+    <!-- Date -->
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input class="form-control" id="date" name="date" type="date" [(ngModel)]="this.inputDate" #date="ngModel"
+        required [appInvalidDate]>
+      <div *ngIf="date.invalid && (date.dirty || date.touched)" class="alert alert-danger">
+        <div *ngIf="date.errors.required">
+          Date is required.
+        </div>
+        <div *ngIf="date.errors.past">
+          That date is in the past...
+        </div>
+        <div *ngIf="date.errors.future">
+          We'll both be dead by then...
+        </div>
+      </div>
+    </div>
+    <!-- Start Time -->
+    <div class="form-group">
+      <label for="startTime">Start Time</label>
+      <input class="form-control" id="startTime" name="startTime" type="time" [(ngModel)]="this.inputStartTime"
+        #startTime="ngModel" required>
+      <div *ngIf="(startTime.invalid || newAppointmentForm.errors?.invalidTimes) && (startTime.dirty || startTime.touched)" class="alert alert-danger">
+        <div *ngIf="startTime.errors?.required">
+          Start Time is required.
+        </div>
+        <div *ngIf="newAppointmentForm.errors?.invalidTimes">
+          Start Time must be before the End Time.
+        </div>
+      </div>
+    </div>
+    <!-- End Time -->
+    <div class="form-group">
+      <label for="endTime">End Time</label>
+      <input class="form-control" id="endTime" name="endTime" type="time" [(ngModel)]="this.inputEndTime"
+        #endTime="ngModel" required>
+      <div *ngIf="(endTime.invalid || newAppointmentForm.errors?.invalidTimes) && (endTime.dirty || endTime.touched)" class="alert alert-danger">
+        <div *ngIf="endTime.errors?.required">
+          End Time is required.
+        </div>
+        <div *ngIf="newAppointmentForm.errors?.invalidTimes">
+          End Time must be after the Start Time.
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" type="submit">Send Invite</button>
+  </form>
+</ng-template>
+<!-- End New Appointment Form Modal Content -->
+
+<!-- Begin Confirmed Appointments -->
+<h2>Confirmed Appointments</h2>
+<button class="btn btn-secondary" (click)="confirmedTableview = !confirmedTableview">
+  {{ confirmedTableview ? 'Block View' : 'Table View' }}
+</button>
+<div class="confirmed-appointments">
+  <!-- Begin Confirmed Appointments Blockview -->
+  <div class="blockview" *ngIf="!confirmedTableview">
+    <div class="appointment confirmed" *ngFor="let appointment of this.appointments">
+      <h3>{{appointment.title}}</h3>
+      <h4>{{ appointment.description }}</h4>
+      <div class="details">
+        <div class="set">
+          <h5>Host</h5>
+          <p>{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</p>
+        </div>
+        <div class="set">
+          <h5>Guest</h5>
+          <p>{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</p>
+        </div>
+        <div class="set">
+          <h5>Date</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</p>
+        </div>
+        <div class="set">
+          <h5>Start Time</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</p>
+        </div>
+        <div class="set">
+          <h5>End Time</h5>
+          <p>{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</p>
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="btn btn-danger" (click)="requestCancellation(appointment)">Request Cancellation</button>
+      </div>
+    </div>
+  </div>
+  <!-- End Confirmed Appointments Blockview -->
+  <!-- Begin Confirmed Appointments Tableview -->
+  <div class="tableview" *ngIf="confirmedTableview && appointments.length">
+    <div class="table appointment-table">
+      <div class="table-heading">
+        <div class="table-row">
+          <div class="table-head">Title</div>
+          <div class="table-head">Description</div>
+          <div class="table-head">Host</div>
+          <div class="table-head">Guest</div>
+          <div class="table-head">Date</div>
+          <div class="table-head">Start Time</div>
+          <div class="table-head">End Time</div>
+          <div class="table-head">Actions</div>
+        </div>
+      </div>
+      <div class="table-body">
+        <div class="table-row" *ngFor="let appointment of appointments">
+          <div class="table-cell">{{ appointment.title }}</div>
+          <div class="table-cell">{{ appointment.description }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</div>
+          <div class="table-cell">{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</div>
+          <div class="table-cell actions"><button class="btn btn-danger btn-sm"
+              (click)="requestCancellation(appointment)">Request Cancellation</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Confirmed Appointments Tableview -->
+  <div class="no-appointment-message" *ngIf="!appointments.length">You don't have any appointments.</div>
+</div>
+
+<!-- Begin Appointments Pending Cancellation -->
+<h2>Appointments Pending Cancellation</h2>
+<button class="btn btn-secondary" (click)="pendingCancellationTableview = !pendingCancellationTableview">
+  {{ pendingCancellationTableview ? 'Block View' : 'Table View' }}
+</button>
+<div class="appointments-pending-cancellation">
+  <!-- Begin Appointments Pending Cancellation Blockview -->
+  <div class="blockview" *ngIf="!pendingCancellationTableview">
+    <div class="appointment pending-cancellation" *ngFor="let appointment of appointmentsPendingCancellation">
+      <h3>{{appointment.title}}</h3>
+      <h4>{{ appointment.description }}</h4>
+      <div class="details">
+        <div class="set">
+          <h5>Host</h5>
+          <p>{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</p>
+        </div>
+        <div class="set">
+          <h5>Guest</h5>
+          <p>{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</p>
+        </div>
+        <div class="set">
+          <h5>Date</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</p>
+        </div>
+        <div class="set">
+          <h5>Start Time</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</p>
+        </div>
+        <div class="set">
+          <h5>End Time</h5>
+          <p>{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</p>
+        </div>
+      </div>
+      <div class="buttons">
+        <button *ngIf="activeUser.username != appointment.cancelRequestBy" class="btn btn-primary"
+          (click)="confirmCancellation(appointment)">Accept Cancellation</button>
+        <button *ngIf="activeUser.username != appointment.cancelRequestBy" class="btn btn-danger"
+          (click)="declineCancellation(appointment)">Decline Cancellation</button>
+        <button *ngIf="activeUser.username === appointment.cancelRequestBy" class="btn btn-danger"
+          (click)="declineCancellation(appointment)">Cancel Cancellation Request</button>
+      </div>
+    </div>
+  </div>
+  <!-- End Appointments Pending Cancellation Blockview -->
+  <!-- Begin Appointments Pending Cancellation Tableview -->
+  <div class="tableview" *ngIf="pendingCancellationTableview && appointmentsPendingCancellation.length">
+    <div class="table appointment-table">
+      <div class="table-heading">
+        <div class="table-row">
+          <div class="table-head">Title</div>
+          <div class="table-head">Description</div>
+          <div class="table-head">Host</div>
+          <div class="table-head">Guest</div>
+          <div class="table-head">Date</div>
+          <div class="table-head">Start Time</div>
+          <div class="table-head">End Time</div>
+          <div class="table-head">Actions</div>
+        </div>
+      </div>
+      <div class="table-body">
+        <div class="table-row" *ngFor="let appointment of appointmentsPendingCancellation">
+          <div class="table-cell">{{ appointment.title }}</div>
+          <div class="table-cell">{{ appointment.description }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</div>
+          <div class="table-cell">{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</div>
+          <div class="table-cell actions">
+            <button *ngIf="activeUser.username != appointment.cancelRequestBy" class="btn btn-primary btn-sm"
+              (click)="confirmCancellation(appointment)">Accept Cancellation</button>
+            <button *ngIf="activeUser.username != appointment.cancelRequestBy" class="btn btn-danger btn-sm"
+              (click)="declineCancellation(appointment)">Decline Cancellation</button>
+            <button *ngIf="activeUser.username === appointment.cancelRequestBy" class="btn btn-danger btn-sm"
+              (click)="declineCancellation(appointment)">Cancel Cancellation Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Appointments Pending Cancellation Tableview -->
+  <div class="no-appointment-message" *ngIf="!appointmentsPendingCancellation.length">
+    You don't have any appointments pending cancellation.
+  </div>
+</div>
+<!-- End Appointments Pending Cancellation -->
+
+<!-- Begin Pending Appointments -->
+<h2>Pending Appointments</h2>
+<button class="btn btn-secondary" (click)="pendingTableview = !pendingTableview">
+  {{ pendingTableview ? 'Block View' : 'Table View' }}
+</button>
+<div class="pending-appointments">
+  <!-- Begin Pending Appointments Blockview -->
+  <div class="blockview" *ngIf="!pendingTableview">
+    <div class="appointment pending" *ngFor="let appointment of pendingAppointments">
+      <h3>{{appointment.title}}</h3>
+      <h4>{{ appointment.description }}</h4>
+      <div class="details">
+        <div class="set">
+          <h5>Host</h5>
+          <p>{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</p>
+        </div>
+        <div class="set">
+          <h5>Guest</h5>
+          <p>{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</p>
+        </div>
+        <div class="set">
+          <h5>Date</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</p>
+        </div>
+        <div class="set">
+          <h5>Start Time</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</p>
+        </div>
+        <div class="set">
+          <h5>End Time</h5>
+          <p>{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</p>
+        </div>
+      </div>
+      <div class="buttons">
+        <button *ngIf="appointment.host != activeUser.username" class="btn btn-primary"(click)="confirmAppointment(appointment)">
+          Accept
+        </button>
+        <button class="btn btn-danger"
+          (click)="appointment.host === activeUser.username ? cancelPendingAppointment(appointment) : declinePendingAppointment(appointment) ">{{ appointment.host === activeUser.username ? 'Cancel' : 'Decline' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- End Pending Appointments Blockview -->
+  <!-- Begin Pending Appointments Tableview -->
+  <div class="tableview" *ngIf="pendingTableview && pendingAppointments.length">
+    <div class="table appointment-table">
+      <div class="table-heading">
+        <div class="table-row">
+          <div class="table-head">Title</div>
+          <div class="table-head">Description</div>
+          <div class="table-head">Host</div>
+          <div class="table-head">Guest</div>
+          <div class="table-head">Date</div>
+          <div class="table-head">Start Time</div>
+          <div class="table-head">End Time</div>
+          <div class="table-head">Actions</div>
+        </div>
+      </div>
+      <div class="table-body">
+        <div class="table-row" *ngFor="let appointment of this.pendingAppointments">
+          <div class="table-cell">{{ appointment.title }}</div>
+          <div class="table-cell">{{ appointment.description }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</div>
+          <div class="table-cell">{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</div>
+          <div class="table-cell actions">
+            <button *ngIf="appointment.host != activeUser.username" class="btn btn-primary btn-sm"(click)="confirmAppointment(appointment)">
+              Accept
+            </button>
+            <button class="btn btn-danger btn=sm"
+              (click)="appointment.host === activeUser.username ? cancelPendingAppointment(appointment) : declinePendingAppointment(appointment) ">{{ appointment.host === activeUser.username ? 'Cancel' : 'Decline' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Pending Appointments Tableview -->
+  <div class="no-appointment-message" *ngIf="!this.pendingAppointments.length">
+    You don't have any pending appointments.
+  </div>
+</div>
+
+<!-- Begin Declined Appointments -->
+<h2>Declined Appointments</h2>
+<button class="btn btn-secondary" (click)="declinedTableview = !declinedTableview">
+  {{ declinedTableview ? 'Block View' : 'Table View' }}
+</button>
+<div class="declined-appointments">
+  <!-- Begin Declined Appointments Blockview -->
+  <div class="blockview" *ngIf="!declinedTableview">
+    <div class="appointment declined" *ngFor="let appointment of declinedAppointments">
+      <h3>{{ appointment.title }}</h3>
+      <h4>{{ appointment.description }}</h4>
+      <div class="details">
+        <div class="set">
+          <h5>Host</h5>
+          <p>{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</p>
+        </div>
+        <div class="set">
+          <h5>Guest</h5>
+          <p>{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</p>
+        </div>
+        <div class="set">
+          <h5>Date</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</p>
+        </div>
+        <div class="set">
+          <h5>Start Time</h5>
+          <p>{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</p>
+        </div>
+        <div class="set">
+          <h5>End Time</h5>
+          <p>{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</p>
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="btn btn-danger" (click)="deleteDeclinedAppointment(appointment)">Delete</button>
+      </div>
+    </div>
+  </div>
+  <!-- End Declined Appointments Blockview -->
+  <!-- Begin Declined Appointments Tableview -->
+  <div class="tableview" *ngIf="declinedTableview && declinedAppointments.length">
+    <div class="table appointment-table">
+      <div class="table-heading">
+        <div class="table-row">
+          <div class="table-head">Title</div>
+          <div class="table-head">Description</div>
+          <div class="table-head">Host</div>
+          <div class="table-head">Guest</div>
+          <div class="table-head">Date</div>
+          <div class="table-head">Start Time</div>
+          <div class="table-head">End Time</div>
+          <div class="table-head">Actions</div>
+        </div>
+      </div>
+      <div class="table-body">
+        <div class="table-row" *ngFor="let appointment of declinedAppointments">
+          <div class="table-cell">{{ appointment.title }}</div>
+          <div class="table-cell">{{ appointment.description }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.host ? 'You' : appointment.host }}</div>
+          <div class="table-cell">{{ activeUser.username == appointment.guest ? 'You' : appointment.guest }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'fullDate' }}</div>
+          <div class="table-cell">{{ appointment.startTime._seconds * 1000 | date:'shortTime' }}</div>
+          <div class="table-cell">{{ appointment.endTime._seconds * 1000 | date:'shortTime'  }}</div>
+          <div class="table-cell actions">
+            <button *ngIf="appointment.host != activeUser.username" class="btn btn-primary btn-sm"(click)="confirmAppointment(appointment)">
+              Accept
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="deleteDeclinedAppointment(appointment)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Declined Appointments Tableview -->
+  <div class="no-appointment-message" *ngIf="!declinedAppointments.length">
+    You don't have any declined appointments. Only appointments where you were the host and the guest declined will be visible here.
+  </div>
+</div>
+<!-- End Declined Appointments -->
